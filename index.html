@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hydroo Handwriter • Indian Style</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Caveat&family=Dancing+Script&family=Patrick+Hand&family=Indie+Flower&family=Baloo+Tamma+2&family=Kalam&family=Homemade+Apple&display=swap" rel="stylesheet">
+
+  <!-- html2canvas for PNG download -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>Hydroo Handwriter</h1>
+
+    <div class="controls">
+      <textarea id="inputText" placeholder="Type or paste your assignment text here..." rows="6"></textarea>
+
+      <div class="selectors">
+        <label for="fontSelect">Font:</label>
+        <select id="fontSelect">
+          <option value="Caveat">Caveat</option>
+          <option value="Dancing Script">Dancing Script</option>
+          <option value="Patrick Hand">Patrick Hand</option>
+          <option value="Indie Flower">Indie Flower</option>
+          <option value="Baloo Tamma 2">Baloo Tamma 2</option>
+          <option value="Kalam">Kalam</option>
+          <option value="Homemade Apple">Homemade Apple</option>
+        </select>
+
+        <label for="fontSize">Size:</label>
+        <input type="number" id="fontSize" value="24" min="12" max="72">
+
+        <label for="fontColor">Color:</label>
+        <input type="color" id="fontColor" value="#000000">
+
+        <button id="generateBtn">Generate Handwriting</button>
+        <button id="saveBtn">Download PNG</button>
+      </div>
+    </div>
+
+    <div class="output" id="outputArea"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
