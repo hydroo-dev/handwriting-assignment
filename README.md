@@ -23,7 +23,7 @@ Convert your typed assignments into realistic handwritten text with multiple pag
 
 ## 🚀 Live Demo
 
-[Try it here](#) _(HydrooDev ka handwrittenAssignment(https://hydroo-dev.github.io/handwriting-assignment/))_
+(#) _(HydrooDev ka handwrittenAssignment(https://hydroo-dev.github.io/handwriting-assignment/))_
 
 ## 📸 Screenshots
 
