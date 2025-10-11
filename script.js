@@ -1,67 +1,164 @@
-const inputText = document.getElementById('inputText');
-const outputArea = document.getElementById('outputArea');
-const fontSelect = document.getElementById('fontSelect');
-const fontSize = document.getElementById('fontSize');
-const fontColor = document.getElementById('fontColor');
-const generateBtn = document.getElementById('generateBtn');
-const saveBtn = document.getElementById('saveBtn');
 
-// Handwriting animation
-generateBtn.addEventListener('click', () => {
-  const text = inputText.value.trim();
-  if (!text) return;
+    const inputText = document.getElementById('inputText');
+    const previewContainer = document.getElementById('previewContainer');
+    const fontSelect = document.getElementById('fontSelect');
+    const fontSize = document.getElementById('fontSize');
+    const fontColor = document.getElementById('fontColor');
+    const generateBtn = document.getElementById('generateBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    const ruledLines = document.getElementById('ruledLines');
+    const marginLeft = document.getElementById('marginLeft');
+    const marginRight = document.getElementById('marginRight');
+    const marginTop = document.getElementById('marginTop');
+    const marginBottom = document.getElementById('marginBottom');
 
-  outputArea.innerHTML = '';
-  outputArea.style.fontFamily = fontSelect.value;
-  outputArea.style.fontSize = fontSize.value + 'px';
-  outputArea.style.color = fontColor.value;
-  outputArea.style.background = "#fff"; // force white background in visible area
+    let pages = [];
 
-  let i = 0;
-  function typeLetter() {
-    if (i < text.length) {
-      const span = document.createElement('span');
-      span.textContent = text[i];
+    // Generate handwriting with live preview
+    generateBtn.addEventListener('click', () => {
+      const text = inputText.value;
+      if (!text.trim()) {
+        alert('Please enter some text first!');
+        return;
+      }
 
-      // Messy Indian-style rotation
-      span.style.display = 'inline-block';
-      const rot = (Math.random() * 10 - 5);
-      span.style.transform = `rotate(${rot}deg)`;
+      previewContainer.innerHTML = '';
+      pages = [];
 
-      outputArea.appendChild(span);
-      i++;
-      setTimeout(typeLetter, 50 + Math.random() * 50);
+      const A4_WIDTH = 595;
+      const A4_HEIGHT = 842;
+      const mLeft = parseInt(marginLeft.value);
+      const mRight = parseInt(marginRight.value);
+      const mTop = parseInt(marginTop.value);
+      const mBottom = parseInt(marginBottom.value);
+      const fSize = parseInt(fontSize.value);
+      const lineHeight = fSize * 1.8;
+
+      const contentWidth = A4_WIDTH - mLeft - mRight;
+      const contentHeight = A4_HEIGHT - mTop - mBottom;
+
+      // Split text into words
+      const words = text.split(/\s+/);
+      let currentPage = createPage();
+      let currentY = 0;
+      let currentLine = '';
+
+      // Test canvas for measuring text
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      ctx.font = `${fSize}px ${fontSelect.value}`;
+
+      for (let word of words) {
+        const testLine = currentLine + (currentLine ? ' ' : '') + word;
+        const metrics = ctx.measureText(testLine);
+        
+        if (metrics.width > contentWidth && currentLine) {
+          // Add current line to page
+          addLineToPage(currentPage, currentLine, currentY);
+          currentY += lineHeight;
+          currentLine = word;
+
+          // Check if we need new page
+          if (currentY + lineHeight > contentHeight) {
+            pages.push(currentPage);
+            currentPage = createPage();
+            currentY = 0;
+          }
+        } else {
+          currentLine = testLine;
+        }
+      }
+
+      // Add remaining text
+      if (currentLine) {
+        addLineToPage(currentPage, currentLine, currentY);
+      }
+      pages.push(currentPage);
+
+      // Render all pages
+      pages.forEach((page, index) => {
+        page.querySelector('.page-number').textContent = `Page ${index + 1} of ${pages.length}`;
+        previewContainer.appendChild(page);
+      });
+    });
+
+    function createPage() {
+      const page = document.createElement('div');
+      page.className = 'page';
+      if (ruledLines.checked) page.classList.add('ruled');
+      
+      const content = document.createElement('div');
+      content.className = 'page-content';
+      content.style.padding = `${marginTop.value}px ${marginRight.value}px ${marginBottom.value}px ${marginLeft.value}px`;
+      content.style.fontFamily = fontSelect.value;
+      content.style.fontSize = fontSize.value + 'px';
+      content.style.color = fontColor.value;
+      
+      const pageNum = document.createElement('div');
+      pageNum.className = 'page-number';
+      
+      page.appendChild(content);
+      page.appendChild(pageNum);
+      return page;
     }
-  }
-  typeLetter();
-});
 
-// Save visible output as A4 PNG with guaranteed white background
-saveBtn.addEventListener('click', () => {
-  if (!outputArea.innerHTML) return;
+    function addLineToPage(page, text, yPos) {
+      const content = page.querySelector('.page-content');
+      const words = text.split(' ');
+      
+      words.forEach((word, idx) => {
+        const span = document.createElement('span');
+        span.textContent = word + (idx < words.length - 1 ? ' ' : '');
+        span.style.display = 'inline-block';
+        
+        // Random rotation for handwritten effect
+        const rot = (Math.random() * 4 - 2);
+        span.style.transform = `rotate(${rot}deg)`;
+        
+        content.appendChild(span);
+      });
+      
+      // Add line break
+      content.appendChild(document.createElement('br'));
+    }
 
-  const A4_WIDTH = 595; 
-  const A4_HEIGHT = 842; 
+    // Download all pages as PNG
+    saveBtn.addEventListener('click', async () => {
+      if (pages.length === 0) {
+        alert('Please generate handwriting first!');
+        return;
+      }
 
-  html2canvas(outputArea, {backgroundColor: "#fff", scale: 2}).then(canvas => {
-    // Create A4 canvas
-    const a4Canvas = document.createElement('canvas');
-    a4Canvas.width = A4_WIDTH;
-    a4Canvas.height = A4_HEIGHT;
-    const ctx = a4Canvas.getContext('2d');
+      saveBtn.textContent = '⏳ Generating PDFs...';
+      saveBtn.disabled = true;
 
-    // Fill A4 canvas white
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, A4_WIDTH, A4_HEIGHT);
+      for (let i = 0; i < pages.length; i++) {
+        const page = pages[i];
+        const canvas = await html2canvas(page, {
+          scale: 2,
+          backgroundColor: '#ffffff',
+          logging: false
+        });
 
-    // Scale and draw handwriting
-    const scale = Math.min(A4_WIDTH / canvas.width, A4_HEIGHT / canvas.height);
-    ctx.drawImage(canvas, 0, 0, canvas.width * scale, canvas.height * scale);
+        const link = document.createElement('a');
+        link.download = `Hydroo-Handwriting-Page-${i + 1}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        
+        // Small delay between downloads
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
 
-    // Save PNG
-    const link = document.createElement('a');
-    link.download = 'Hydroo-Handwriting-A4.png';
-    link.href = a4Canvas.toDataURL('image/png');
-    link.click();
-  });
-});
+      saveBtn.textContent = '💾 Download All Pages (PNG)';
+      saveBtn.disabled = false;
+      alert(`✅ ${pages.length} page(s) downloaded successfully!`);
+    });
+
+    // Real-time updates
+    [fontSelect, fontSize, fontColor, ruledLines, marginLeft, marginRight, marginTop, marginBottom].forEach(control => {
+      control.addEventListener('change', () => {
+        if (pages.length > 0) {
+          generateBtn.click();
+        }
+      });
+    });
